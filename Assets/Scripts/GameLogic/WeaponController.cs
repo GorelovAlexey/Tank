@@ -29,11 +29,7 @@ public class WeaponController : MonoBehaviour
     float laserMaxDistance = 100;
 
     [SerializeField]
-    private float laserFadeTime = 0.05f;
-
-    private float timer = 0;
-    private bool timerActive = false;
-
+    private float laserFadeTime = 0.75f;    
 
     [SerializeField]
     GameObject shotTrace;
@@ -47,8 +43,6 @@ public class WeaponController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        LaserTimer();
-
         // Сообщаем системе прицеливания куда направлен ствол турели, чтобы она могла передвинуть курсор
         var gunDirection = new Ray(gun.transform.position, gun.transform.forward);
         aimSystem.SetRealAim(aimSystem.AimSpherePoint(gunDirection));
@@ -78,41 +72,22 @@ public class WeaponController : MonoBehaviour
             }
         }
 
-        //Отображение выстрела
+        DisplayTrace(hitPosition);
+    }
+
+    // Отображение выстрела
+    void DisplayTrace(Vector3 hitPosition)
+    {
         var trace = Instantiate(shotTrace).GetComponent<ShotTrace>();
-        trace.start = transform.position;
+
+        // !Потенциально может сломаться - ненадежное решение
+        // Поиск конца пушки -  дулного тормоза (Muzzle brake)
+        var start = gun.transform.GetChild(0)?.GetChild(0);
+        trace.start = start != null ? start.position : transform.position;
         trace.end = hitPosition;
+
         trace.timer = laserFadeTime;
         trace.Reset();
- 
-    }
-
-    // !! УДАЛИТЬ!!
-    /// <summary>
-    /// Таймер по истечении которого пропадает след выстрела
-    /// </summary>
-    void LaserTimer()
-    {
-        if (timerActive)
-        {
-            timer += Time.deltaTime;
-            if (timer >= laserFadeTime)
-            {
-                timer = 0;
-                timerActive = false;
-                laserRenderer.enabled = false;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Запуск таймера для исчезновения выстрела
-    /// </summary>
-    void StartLaserTimer()
-    {
-        laserRenderer.enabled = true;
-        timer = 0;
-        timerActive = true;
     }
 
     /// <summary>
